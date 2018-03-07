@@ -50,7 +50,7 @@ class Ping:
 				(Type, Code, _, _, _)  = struct.unpack('!bbHHh', recPacket[20:28])
 				s.settimeout(self.timeout)
 				s.close()
-				return (Type, Code, addr, datetime.datetime.now())
+				return {'Type' : Type, 'Code' : Code, 'Addr' :  addr, 'DateTime' : datetime.datetime.now().strftime('%d, %b %Y  %H:%M')}
 		except Exception as exc:
 			# print('exc {}'.format(exc))
 			pass	
@@ -61,10 +61,13 @@ class Ping:
 
 		for item in done:
 			try:
-				(Type,Code,addr, time) = item.result()
-				if( (Type == 0 ) and (Code == 0) ):
-					self.available_list.append((addr, time))
+				# (Type,Code,addr, time) = item.result()
+				# if( (Type == 0 ) and (Code == 0) ):
+				if (item.result()['Type'] == 0) and (item.result()['Code'] == 0):
+					# self.available_list.append((addr, time))
+					self.available_list.append( { 'Addr' : item.result()['Addr'], 'DateTime' : item.result()['DateTime'] })
 			except Exception as exc:
+				# print('exc {}'.format(exc))
 				pass		
 
 	def get_available_list(self):
@@ -80,15 +83,18 @@ class Ping:
 		self.loop.close()
 		Available = self.get_available_list()
 		length = len(Available)
-		return (Available, length)
+		return {'Available' : Available, 'Length' : length}
 
 def main():
+	import json
+
 	time0 = datetime.datetime.now()
-	ip_range = range(0,20) 
-	ip_address_list = [ '10.28.{}.{}'.format(x, y) for x in ip_range for y in ip_range] 
+	ip_range = range(1,25) 
+	ip_address_list = [ '10.28.136.{}'.format(x) for x in ip_range] 
 	P = Ping(ip_address_list, 0.04)
-	(available, length) = P.start()
-	print('availbale hosts {} \n len {}'.format(available , length))
+	dsting = json.dumps(P.start())
+	lstring = json.loads(dsting)
+	print(lstring)
 
 	time1 = datetime.datetime.now() - time0
 	print('exited with time {} \n'.format(time1))
