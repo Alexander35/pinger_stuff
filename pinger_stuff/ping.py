@@ -39,7 +39,7 @@ class Ping:
 		    chk_summ = self.checksum(ping_pack.decode())
 		    ping_pack = struct.pack('!bbHHh', 8,0,chk_summ,1,1)
 		except Exception as exc:
-			pass
+			print('exc ping : ping_pong {}'.format(exc))
 
 		try:
 			with socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP) as s:
@@ -52,8 +52,7 @@ class Ping:
 				s.close()
 				return {'Type' : Type, 'Code' : Code, 'Addr' :  addr, 'DateTime' : datetime.datetime.now().strftime('%d, %b %Y  %H:%M')}
 		except Exception as exc:
-			# print('exc {}'.format(exc))
-			pass	
+			print('exc ping ping_pong {}'.format(exc))	
 
 	async def ping_all(self):
 		tasks = [self.ping_pong(ip) for ip in self.ip_list]
@@ -67,8 +66,7 @@ class Ping:
 					# self.available_list.append((addr, time))
 					self.available_list.append( { 'Addr' : item.result()['Addr'], 'DateTime' : item.result()['DateTime'] })
 			except Exception as exc:
-				# print('exc {}'.format(exc))
-				pass		
+				print('exc ping ping_all {}'.format(exc))	
 
 	def get_available_list(self):
 		return self.available_list	
@@ -78,7 +76,10 @@ class Ping:
 			self.loop = asyncio.ProactorEventLoop()
 			asyncio.set_event_loop(self.loop)
 		else:
-			self.loop = asyncio.get_event_loop()
+			print('using not win32 arch. it demands the root priveleges!')
+			self.loop = asyncio.new_event_loop()
+			asyncio.set_event_loop(self.loop)			
+			# self.loop = asyncio.get_event_loop()
 		data = self.loop.run_until_complete(self.ping_all())
 		self.loop.close()
 		Available = self.get_available_list()
